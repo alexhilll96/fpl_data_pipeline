@@ -265,8 +265,10 @@ fixture_rows = zip(master_df.gameweek_id,
                    master_df.away_result
                    )
 
+# Use a sql command to create a temp table as a copy of the team_info table 
 cur.execute("""CREATE TEMP TABLE temp AS SELECT * FROM team_info WITH NO DATA;""")
 
+# Insert data from our teams zip file into the temp table we have created 
 cur.executemany("""INSERT INTO temp(team_id, team_name, total_points, league_position, games_played, 
 total_wins, total_loss, total_draw, total_goals_scored, total_goals_against, goal_difference, home_wins, 
 away_wins, home_loss, away_loss, home_draw, away_draw, home_points, away_points, home_goals_scored, 
@@ -276,6 +278,8 @@ strength_defence_home, strength_defence_away
 ) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);""", teams_rows)
 
+# Insert data from our temp table into the team_info table. 
+# On conflict team_id do update
 cur.execute("""INSERT INTO team_info(
             team_id,
             team_name,
@@ -382,9 +386,11 @@ cur.execute("""INSERT INTO team_info(
             strength_defence_away=EXCLUDED.strength_defence_away
             ;""")
 
+# Create temp table as a copy of fixture_info table
 cur.execute("""CREATE TEMP TABLE fix_temp AS SELECT * FROM fixture_info WITH NO DATA;""")
 cur.execute("""DELETE FROM fixture_info""")
 
+# Insert data from our fixture zip file into the temp table
 cur.executemany("""INSERT INTO fix_temp(
 gameweek_id,
 finished,
@@ -402,6 +408,7 @@ home_result,
 away_result
 ) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);""", fixture_rows)
 
+# Insert data from out temp table into the fixture_info table
 cur.execute("""INSERT INTO fixture_info(
 gameweek_id,
 finished,
@@ -436,6 +443,7 @@ away_result
 
 FROM fix_temp """)
 
+# Close connection
 conn.commit()
 cur.close()
 conn.close()
